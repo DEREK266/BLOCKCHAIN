@@ -1,0 +1,20 @@
+# Dependencies and build output
+node_modules/
+artifacts/
+cache/
+coverage/
+coverage.json
+typechain-types/
+
+# Secrets - never commit private keys, seed phrases or API keys
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

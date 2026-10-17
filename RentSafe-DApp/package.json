@@ -1,0 +1,17 @@
+{
+  "name": "rentsafe-dapp",
+  "version": "1.0.0",
+  "description": "RentSafe - a decentralized escrow for rental security deposits (Solidity + Ethers.js + MetaMask)",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "start": "http-server frontend -p 8080 -c-1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0",
+    "http-server": "^14.1.1"
+  },
+  "license": "MIT"
+}

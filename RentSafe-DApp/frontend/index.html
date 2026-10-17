@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RentSafe – Rental Deposit Escrow DApp</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 3 13v16h26V13Z' fill='%230f766e'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3 3 13v16h26V13L16 3Z" fill="currentColor" opacity=".15" />
+        <path d="M16 3 3 13v16h26V13L16 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M16 12c2.4 1.4 4.6 2 6 2v4c0 4-2.6 6.6-6 8-3.4-1.4-6-4-6-8v-4c1.4 0 3.6-.6 6-2Z" fill="currentColor" />
+      </svg>
+      <div>
+        <h1>RentSafe</h1>
+        <p class="tagline">Rental security deposits held in a smart contract, not by the landlord</p>
+      </div>
+    </div>
+    <div class="wallet">
+      <span id="networkBadge" class="badge">Not connected</span>
+      <button id="connectBtn" class="btn primary">Connect MetaMask</button>
+    </div>
+  </header>
+
+  <div id="notice" class="notice hidden" role="alert">
+    <span id="noticeText"></span>
+    <button id="noticeAction" class="btn small hidden"></button>
+  </div>
+
+  <main class="grid">
+    <!-- Account --------------------------------------------------------- -->
+    <section class="card">
+      <h2>Your account</h2>
+      <dl class="kv">
+        <dt>Address</dt><dd id="accAddress" class="mono">—</dd>
+        <dt>ETH balance</dt><dd id="accBalance">—</dd>
+        <dt>Role</dt><dd id="accRole">—</dd>
+        <dt>Withdrawable from RentSafe</dt><dd id="accPending">—</dd>
+      </dl>
+      <button id="withdrawBtn" class="btn" data-needs-wallet>Withdraw my ETH</button>
+    </section>
+
+    <!-- Contract stats -------------------------------------------------- -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Contract on the blockchain</h2>
+        <button id="refreshBtn" class="btn small ghost" data-needs-wallet>Refresh</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="stat-label">Agreements</span><span id="statCount" class="stat-value">—</span></div>
+        <div class="stat"><span class="stat-label">ETH in escrow</span><span id="statEscrow" class="stat-value">—</span></div>
+        <div class="stat"><span class="stat-label">Contract balance</span><span id="statBalance" class="stat-value">—</span></div>
+        <div class="stat"><span class="stat-label">Minimum deposit</span><span id="statMin" class="stat-value">—</span></div>
+      </div>
+      <dl class="kv">
+        <dt>Platform</dt><dd id="statPlatform">—</dd>
+        <dt>Contract address</dt><dd id="statAddress" class="mono">—</dd>
+        <dt>Arbiter</dt><dd id="statArbiter" class="mono">—</dd>
+        <dt>Latest block</dt><dd id="statBlock">—</dd>
+      </dl>
+    </section>
+
+    <!-- Create agreement ------------------------------------------------ -->
+    <section class="card">
+      <h2>1. Create an agreement <span class="role-tag">Landlord</span></h2>
+      <form id="createForm" novalidate>
+        <label>Tenant wallet address
+          <input id="tenantInput" class="mono" placeholder="0x…" autocomplete="off" />
+        </label>
+        <label>Security deposit (ETH)
+          <input id="depositInput" inputmode="decimal" placeholder="e.g. 1" autocomplete="off" />
+        </label>
+        <label>Lease end
+          <input id="leaseEndInput" type="datetime-local" step="1" />
+        </label>
+        <div class="quick">
+          <span>Quick set:</span>
+          <button type="button" class="chip" data-add-minutes="2">+2 min (demo)</button>
+          <button type="button" class="chip" data-add-minutes="43200">+30 days</button>
+          <button type="button" class="chip" data-add-minutes="525600">+1 year</button>
+        </div>
+        <label>Property details <span id="propertyCount" class="counter">0/200</span>
+          <textarea id="propertyInput" rows="2" placeholder="e.g. Flat 203, Green Residency, Manipal"></textarea>
+        </label>
+        <p id="createError" class="form-error hidden"></p>
+        <button type="submit" class="btn primary" data-needs-wallet>Create agreement</button>
+      </form>
+    </section>
+
+    <!-- Arbiter --------------------------------------------------------- -->
+    <section class="card">
+      <h2>Platform settings <span class="role-tag arbiter">Arbiter</span></h2>
+      <p class="muted">Only the account that deployed the contract can change the minimum deposit for new agreements.</p>
+      <form id="minDepositForm" novalidate>
+        <label>New minimum deposit (ETH)
+          <input id="minDepositInput" inputmode="decimal" placeholder="e.g. 0.05" autocomplete="off" />
+        </label>
+        <p id="minDepositError" class="form-error hidden"></p>
+        <button type="submit" class="btn" data-needs-wallet>Update minimum deposit</button>
+      </form>
+
+      <h3 class="subhead">Testing option</h3>
+      <label class="check">
+        <input type="checkbox" id="forceSend" />
+        <span>Send transactions even if they are expected to fail. Normally the transaction is simulated first and
+          stopped before it reaches MetaMask. When this is ticked, it is mined and fails on-chain (status 0),
+          which is useful for recording a failed transaction.</span>
+      </label>
+    </section>
+
+    <!-- Manage agreement ------------------------------------------------ -->
+    <section class="card wide">
+      <h2>2. Manage an agreement</h2>
+      <form id="loadForm" class="row" novalidate>
+        <input id="agreementIdInput" inputmode="numeric" placeholder="Agreement ID, e.g. 1" autocomplete="off" />
+        <button type="submit" class="btn" data-needs-wallet>Load agreement</button>
+      </form>
+
+      <div id="agreementEmpty" class="empty">Load an agreement by ID, or click a row in the table below.</div>
+
+      <div id="agreementView" class="hidden">
+        <div class="agreement-head">
+          <h3 id="agTitle">Agreement #—</h3>
+          <span id="agStatus" class="status">—</span>
+          <span id="agYourRole" class="badge">—</span>
+        </div>
+        <ol id="agTimeline" class="timeline"></ol>
+        <dl class="kv two-col">
+          <dt>Property</dt><dd id="agProperty">—</dd>
+          <dt>Landlord</dt><dd id="agLandlord" class="mono">—</dd>
+          <dt>Tenant</dt><dd id="agTenant" class="mono">—</dd>
+          <dt>Deposit</dt><dd id="agDeposit">—</dd>
+          <dt>Lease end</dt><dd id="agLeaseEnd">—</dd>
+          <dt>Created</dt><dd id="agCreated">—</dd>
+          <dt>Proposed deduction</dt><dd id="agDeduction">—</dd>
+          <dt>Settlement</dt><dd id="agSettlement">—</dd>
+        </dl>
+
+        <div class="actions">
+          <div class="action" data-action="pay">
+            <h4>Pay deposit <span class="who">Tenant</span></h4>
+            <label>Amount to send (ETH)
+              <input id="payAmountInput" inputmode="decimal" autocomplete="off" />
+            </label>
+            <p class="hint"></p>
+            <button id="payBtn" class="btn primary" data-needs-wallet>Pay deposit</button>
+          </div>
+
+          <div class="action" data-action="cancel">
+            <h4>Cancel agreement <span class="who">Landlord</span></h4>
+            <p class="muted small">Only possible before the deposit is paid.</p>
+            <p class="hint"></p>
+            <button id="cancelBtn" class="btn danger" data-needs-wallet>Cancel agreement</button>
+          </div>
+
+          <div class="action" data-action="propose">
+            <h4>Propose refund <span class="who">Landlord</span></h4>
+            <label>Deduction to keep (ETH)
+              <input id="deductionInput" inputmode="decimal" placeholder="0" autocomplete="off" />
+            </label>
+            <label>Reason for deduction
+              <input id="reasonInput" placeholder="e.g. Broken window" autocomplete="off" />
+            </label>
+            <p class="hint"></p>
+            <button id="proposeBtn" class="btn primary" data-needs-wallet>Propose refund</button>
+          </div>
+
+          <div class="action" data-action="accept">
+            <h4>Accept refund <span class="who">Tenant</span></h4>
+            <p class="muted small">Accepts the landlord's proposal and credits both parties.</p>
+            <p class="hint"></p>
+            <button id="acceptBtn" class="btn primary" data-needs-wallet>Accept refund</button>
+          </div>
+
+          <div class="action" data-action="dispute">
+            <h4>Raise dispute <span class="who">Landlord or tenant</span></h4>
+            <p class="muted small">Sends the agreement to the arbiter once the lease has ended.</p>
+            <p class="hint"></p>
+            <button id="disputeBtn" class="btn warn" data-needs-wallet>Raise dispute</button>
+          </div>
+
+          <div class="action" data-action="resolve">
+            <h4>Resolve dispute <span class="who">Arbiter</span></h4>
+            <label>Refund to tenant (ETH)
+              <input id="resolveInput" inputmode="decimal" autocomplete="off" />
+            </label>
+            <p class="hint"></p>
+            <button id="resolveBtn" class="btn primary" data-needs-wallet>Resolve dispute</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agreements table ------------------------------------------------ -->
+    <section class="card wide">
+      <div class="card-head">
+        <h2>3. Agreements stored on the blockchain</h2>
+        <label class="check inline"><input type="checkbox" id="onlyMine" /> <span>Only mine</span></label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Property</th><th>Landlord</th><th>Tenant</th><th>Deposit</th><th>Lease end</th><th>Status</th></tr>
+          </thead>
+          <tbody id="agreementsBody">
+            <tr><td colspan="7" class="empty">Connect MetaMask to read agreements.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Transaction log ------------------------------------------------- -->
+    <section class="card wide">
+      <div class="card-head">
+        <h2>Transaction log <span class="muted small">(this session)</span></h2>
+        <button id="clearLogBtn" class="btn small ghost">Clear</button>
+      </div>
+      <ul id="txLog" class="txlog">
+        <li class="empty">Transactions you send from this page will appear here.</li>
+      </ul>
+    </section>
+
+    <!-- Event history --------------------------------------------------- -->
+    <section class="card wide">
+      <h2>Contract event history</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Block</th><th>Event</th><th>Details</th><th>Transaction</th></tr>
+          </thead>
+          <tbody id="eventsBody">
+            <tr><td colspan="4" class="empty">Connect MetaMask to read events.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    RentSafe DApp · Solidity smart contract · Ethers.js v6 · MetaMask
+  </footer>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

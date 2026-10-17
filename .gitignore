@@ -1,0 +1,5 @@
+# Local Ganache chain data (runtime state, not source)
+ganache-db/
+
+# Office lock files created while a document is open
+~$*

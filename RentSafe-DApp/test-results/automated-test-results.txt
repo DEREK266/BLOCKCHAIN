@@ -1,0 +1,93 @@
+RentSafe - automated test results
+==================================
+Command      : REPORT_GAS=true npx hardhat test
+Run on       : 2026-10-16 14:49 IST
+Hardhat      : 2.29.1
+Node.js      : v22.23.2
+Solidity     : 0.8.19 (EVM target: paris, optimizer off)
+Network      : Hardhat in-process test network
+
+Test IDs match the test-case tables in README.md:
+  D-xx constructor/deployment, V-xx valid inputs, I-xx invalid inputs, U-xx unauthorised inputs
+
+
+  RentSafe
+    Deployment (constructor)
+      ✔ D-01 sets the arbiter, platform name and minimum deposit
+      ✔ D-02 rejects an empty platform name
+      ✔ D-03 rejects a zero minimum deposit
+    Valid inputs
+      ✔ V-01 landlord creates an agreement
+      ✔ V-02 tenant pays the exact deposit into escrow
+      ✔ V-03 landlord cancels an unpaid agreement
+      ✔ V-04 landlord proposes a refund with a deduction after the lease ends
+      ✔ V-05 landlord proposes a full refund (zero deduction needs no reason)
+      ✔ V-06 tenant accepts the refund and the split is credited to both parties
+      ✔ V-07 tenant and landlord withdraw their credited ETH
+      ✔ V-08 tenant raises a dispute against the landlord's proposal
+      ✔ V-09 landlord raises a dispute after the lease ends (no proposal yet)
+      ✔ V-10 arbiter resolves a dispute and credits the decided split
+      ✔ V-11 arbiter updates the minimum deposit
+      ✔ V-12 agreement IDs are listed for both landlord and tenant
+    Invalid inputs
+      ✔ I-01 rejects the zero address as tenant
+      ✔ I-02 rejects the landlord as their own tenant
+      ✔ I-03 rejects a deposit below the minimum
+      ✔ I-04 rejects a lease end date in the past
+      ✔ I-05 rejects empty or over-long property details
+      ✔ I-06 rejects a deposit payment of the wrong amount
+      ✔ I-07 rejects paying the deposit twice
+      ✔ I-08 rejects agreement IDs that do not exist
+      ✔ I-09 rejects cancelling an agreement that is already funded
+      ✔ I-10 rejects a refund proposal before the lease ends
+      ✔ I-11 rejects a deduction larger than the deposit
+      ✔ I-12 rejects a deduction without a reason
+      ✔ I-13 rejects accepting a refund when none was proposed
+      ✔ I-14 rejects a dispute before the lease ends
+      ✔ I-15 rejects resolving with a refund larger than the deposit
+      ✔ I-16 rejects resolving an agreement that is not disputed
+      ✔ I-17 rejects a withdrawal when nothing is owed
+      ✔ I-18 rejects setting the minimum deposit to zero
+      ✔ I-19 rejects plain ETH transfers sent directly to the contract
+    Unauthorised inputs
+      ✔ U-01 an outsider cannot pay someone else's deposit
+      ✔ U-02 the tenant cannot cancel the agreement
+      ✔ U-03 the tenant cannot propose the refund
+      ✔ U-04 the landlord cannot accept the refund on the tenant's behalf
+      ✔ U-05 an outsider cannot raise a dispute
+      ✔ U-06 the landlord cannot resolve a dispute (arbiter only)
+      ✔ U-07 a non-arbiter cannot change the minimum deposit
+      ✔ U-08 the arbiter cannot be a party to an agreement
+
+·--------------------------------|----------------------------|-------------|-----------------------------·
+|      Solc version: 0.8.19      ·  Optimizer enabled: false  ·  Runs: 200  ·  Block limit: 60000000 gas  │
+·································|····························|·············|······························
+|  Methods                                                                                                │
+·············|···················|··············|·············|·············|···············|··············
+|  Contract  ·  Method           ·  Min         ·  Max        ·  Avg        ·  # calls      ·  usd (avg)  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  acceptRefund     ·           -  ·          -  ·     110336  ·            3  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  cancelAgreement  ·           -  ·          -  ·      50137  ·            2  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  createAgreement  ·      264697  ·     343867  ·     339469  ·           18  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  payDeposit       ·           -  ·          -  ·      74947  ·           15  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  proposeRefund    ·       44074  ·      84552  ·      76456  ·           10  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  raiseDispute     ·       35119  ·      37488  ·      36811  ·            7  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  resolveDispute   ·           -  ·          -  ·     108303  ·            2  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  setMinDeposit    ·           -  ·          -  ·      28302  ·            2  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  RentSafe  ·  withdraw         ·           -  ·          -  ·      30389  ·            7  ·          -  │
+·············|···················|··············|·············|·············|···············|··············
+|  Deployments                   ·                                          ·  % of limit   ·             │
+·································|··············|·············|·············|···············|··············
+|  RentSafe                      ·           -  ·          -  ·    3319349  ·        5.5 %  ·          -  │
+·--------------------------------|--------------|-------------|-------------|---------------|-------------·
+
+  42 passing (1s)
+
