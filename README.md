@@ -10,8 +10,6 @@ This guide takes you from a fresh clone to a running DApp on a local Ganache blo
 |---|---|
 | [`RentSafe-DApp/`](RentSafe-DApp/) | The DApp: Solidity contract, HTML/CSS/JS frontend, automated tests |
 | [`RentSafe-DApp/README.md`](RentSafe-DApp/README.md) | Full project report |
-| [`IA2_CSE4444_BlockchainTechnology.pdf`](IA2_CSE4444_BlockchainTechnology.pdf) | Assignment brief |
-| [`YourName_RegNum_BT_Assignment2.docx`](YourName_RegNum_BT_Assignment2.docx) | Assignment submission document |
 
 ## Prerequisites
 

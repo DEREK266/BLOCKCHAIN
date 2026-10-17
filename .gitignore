@@ -3,3 +3,8 @@ ganache-db/
 
 # Office lock files created while a document is open
 ~$*
+
+# Assignment documents (guidelines, Word submission and PDF exports) stay local
+*.doc
+*.docx
+*.pdf
